@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Users: Public profile read (or auth only), owner write
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Notices: Public read, Admin write
+    match /notices/{noticeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Events: Public read, Admin or Club Head write (simplified to authenticated for demo)
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isAuthenticated(); 
+    }
+
+    // Marketplace: Public read, Owner write
+    match /listings/{listingId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.sellerId;
+    }
+
+    // Queries: Owner only
+    match /queries/{queryId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
