@@ -34,7 +34,7 @@ CampusQuery is a comprehensive web application designed to streamline campus lif
 3.  Create a `.env` file in the root directory:
     ```env
     VITE_GEMINI_API_KEY=your_gemini_key
-    MONGODB_URI=your_mongodb_url
+    MONGODB_URI=mongodb://localhost:27017/campusquery
     JWT_SECRET=your_jwt_secret
     ```
 4.  Seed the Database:
